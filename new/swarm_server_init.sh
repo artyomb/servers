@@ -1,5 +1,5 @@
 #!/bin/bash
-# curl https:// | sh
+# curl https://raw.githubusercontent.com/artyomb/servers/main/new/swarm_server_init.sh | sh
 
 set -e
 DOCKER_COMPOSE_VER=2.19.0
@@ -23,7 +23,7 @@ docker -v
 
 echo '{ "features": { "buildkit": true } }' > /etc/docker/daemon.json
 docker swarm init
-docker login docker-registry.monitorsoft.ru -u mons -p monitor
+# docker login docker-registry... -u user -p password
 
 # docker service create --name registry --publish published=5000,target=5000 registry:2
 # TODO: https://github.com/moby/buildkit/issues/1368
@@ -42,7 +42,7 @@ wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/downl
 chmod a+x /usr/local/bin/yq
 
 snap install ruby --classic
-gem install dry-stack
+gem install dry-stack build-labels
 
 # add before [ -z "$PS1" ] && return
 sed -i.old '1s;^;PATH=\$PATH:~/.gem/bin\n;' ~/.bashrc
