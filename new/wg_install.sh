@@ -1,3 +1,6 @@
+#!/bin/bash
+# curl https://raw.githubusercontent.com/artyomb/servers/main/new/wg_install.sh | sh
+
 apt install -y wireguard
 
 wg genkey | sudo tee /etc/wireguard/private.key
