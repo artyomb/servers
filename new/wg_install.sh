@@ -1,9 +1,10 @@
 #!/bin/bash
-# curl https://raw.githubusercontent.com/artyomb/servers/main/new/wg_install.sh | sh -s server wg1 10.0.0.1/24
+# curl https://raw.githubusercontent.com/artyomb/servers/main/new/wg_install.sh | sh -s server wg1 10.0.0.1/24 51820
+# curl https://raw.githubusercontent.com/artyomb/servers/main/new/wg_install.sh | sh -s client wg1 123.123.123.123:51820 Pub...Key 10.0.0.2/24
 if [ "$#" -eq 0 ]; then
   echo "Commands example:"
-  echo "server wg0 10.8.0.1/24"
-  echo "client wg0 123.123.123.123 P...asd=  10.8.0.2/24"
+  echo "server wg0 10.8.0.1/24 51820"
+  echo "client wg0 123.123.123.123:51820 P...asd=  10.8.0.2/24"
   exit
 fi
 
@@ -27,13 +28,15 @@ systemctl status wg-quick@${conf_name}.service
 case "$1" in
     "server")
         network=${3:-"10.8.0.1/24"}
+        port=${4:-"51820"}
         echo "network: ${network}"
+        echo "port: ${port}"
 
         tee /etc/wireguard/"${conf_name}".conf << END
 [Interface]
 PrivateKey = ${wg_private}
 Address = ${network}
-ListenPort = 51820
+ListenPort = ${port}
 SaveConfig = true
 
 # PostUp = ufw route allow in on wg0 out on eth0
