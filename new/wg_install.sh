@@ -1,5 +1,5 @@
 #!/bin/bash
-# curl https://raw.githubusercontent.com/artyomb/servers/main/new/wg_install.sh | sh
+# curl https://raw.githubusercontent.com/artyomb/servers/main/new/wg_install.sh | sh -s server wg1 10.0.0.1/24
 if [ "$#" -eq 0 ]; then
   echo "Commands example:"
   echo "server wg0 10.8.0.1/24"
@@ -7,23 +7,26 @@ if [ "$#" -eq 0 ]; then
   exit
 fi
 
+conf_name=${2:-"wg0"}
+echo "conf_name: ${conf_name}"
+
 apt install -y wireguard
 
-wg genkey | sudo tee /etc/wireguard/private.key
-chmod go= /etc/wireguard/private.key
+if [ ! -e /etc/wireguard/private.key ]; then
+  wg genkey | sudo tee /etc/wireguard/private.key
+  chmod go= /etc/wireguard/private.key
+  cat /etc/wireguard/private.key | wg pubkey | tee /etc/wireguard/public.key
+fi
 
-cat /etc/wireguard/private.key | wg pubkey | tee /etc/wireguard/public.key
 wg_private=$(cat /etc/wireguard/private.key)
 
-systemctl enable wg-quick@wg0.service
-systemctl start wg-quick@wg0.service
-systemctl status wg-quick@wg0.service
+systemctl enable wg-quick@${conf_name}.service
+systemctl start wg-quick@${conf_name}.service
+systemctl status wg-quick@${conf_name}.service
 
 case "$1" in
     "server")
-        conf_name=${2:-"wg0"}
         network=${3:-"10.8.0.1/24"}
-        echo "conf_name: ${conf_name}"
         echo "network: ${network}"
 
         tee /etc/wireguard/"${conf_name}".conf << END
@@ -53,11 +56,9 @@ END
         ;;
 
     "client")
-        conf_name=${2:-"wg0"}
         server_ip=${3:-"SERVER_IP:51820"}
         server_public=${4:-"SERVER_PUBLIC_KEY"}
         client_ip=${5:-"10.8.0.2/24"}
-        echo "conf_name: ${conf_name}"
         echo "server_ip: ${server_ip}"
         echo "server_public: ${server_public}"
         echo "client_ip: ${client_ip}"
