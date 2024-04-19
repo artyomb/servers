@@ -1,6 +1,6 @@
 #!/bin/bash
 # curl https://raw.githubusercontent.com/artyomb/servers/main/new/wg_install.sh | sh -s server wg1 10.0.0.1/24 51820
-# curl https://raw.githubusercontent.com/artyomb/servers/main/new/wg_install.sh | sh -s client wg1 123.123.123.123:51820 Pub...Key 10.0.0.2/24
+# curl https://raw.githubusercontent.com/artyomb/servers/main/new/wg_install.sh | sh -s client wg1 123.123.123.123:51820 Pub...Key 10.0.0.2/32
 if [ "$#" -eq 0 ]; then
   echo "Commands example:"
   echo "server wg0 10.8.0.1/24 51820"
@@ -61,7 +61,7 @@ END
     "client")
         server_ip=${3:-"SERVER_IP:51820"}
         server_public=${4:-"SERVER_PUBLIC_KEY"}
-        client_ip=${5:-"10.8.0.2/24"}
+        client_ip=${5:-"10.8.0.2/32"}
         echo "server_ip: ${server_ip}"
         echo "server_public: ${server_public}"
         echo "client_ip: ${client_ip}"
@@ -75,9 +75,10 @@ Address = ${client_ip}
 PublicKey = ${server_public}
 # AllowedIPs = 10.8.0.0/24
 Endpoint = ${server_ip}
+PersistentKeepalive = 20
 END
         echo "Run on server:"
-        echo "wg set ${conf_name} peer $(cat /etc/wireguard/public.key)= allowed-ips 10.8.0.2"
+        echo "wg set ${conf_name} peer $(cat /etc/wireguard/public.key)= allowed-ips ${client_ip}"
         ;;
     *)
         echo "Invalid command. Usage: $0 {server|client}"
