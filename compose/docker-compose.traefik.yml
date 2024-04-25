@@ -1,0 +1,61 @@
+version: '3.8'
+
+services:
+  reverse-proxy:
+    image: traefik:v2.9
+    command:
+      - --providers.docker
+      - --providers.docker.constraints=Label(`traefik.enable`, `true`)
+      - --providers.docker.network=ingress-routing
+      - --providers.docker.swarmMode=true
+      # Set up an insecure listener that redirects all traffic to TLS
+      - --entrypoints.http.address=:80
+      - --entrypoints.http.http.redirections.entryPoint.to=https
+      - --entrypoints.http.http.redirections.entryPoint.scheme=https
+      # Set up the TLS configuration for our websecure listener
+      - --entrypoints.https.address=:443
+      - --entrypoints.https.http.tls=true
+      - --entrypoints.https.http.tls.certResolver=le
+      - --certificatesresolvers.le.acme.email=default@gmail.com
+      - --certificatesresolvers.le.acme.storage=/certificates/acme.json
+      - --certificatesresolvers.le.acme.tlschallenge=true
+      - --accesslog
+      - --log
+      - --api
+      - --api.insecure=true
+
+    ports:
+      - 80:80
+      - 443:443
+    networks:
+      - ingress-routing
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - traefik_data:/certificates
+      - traefik_data:/letsencrypt
+    deploy:
+      labels:
+        - traefik.http.middlewares.trf_auth.basicauth.users=admin:$$apr1$$i7hdbc9g$$Rkocxo9snhmuESvUg0TTv/
+        - traefik.http.routers.trf.middlewares=trf_auth
+        - traefik.enable=true
+        - traefik.http.routers.trf.service=trf
+        - traefik.http.services.trf.loadbalancer.server.port=8080
+        - traefik.http.routers.trf.tls=true
+        - traefik.http.routers.trf.tls.certresolver=le
+        - traefik.http.routers.trf.tls.domains[0].main=traefik.${DOMAIN}
+        - traefik.http.routers.trf.rule=HostRegexp(`{name:traefik\..*}`)
+
+
+      placement:
+        constraints:
+          - node.role == manager
+
+# docker network create --driver overlay ingress-routing
+networks:
+  ingress-routing:
+    external: true
+    # attachable: true
+    name: ingress-routing
+
+volumes:
+  traefik_data:
