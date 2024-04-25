@@ -33,9 +33,9 @@ chmod +x /usr/bin/docker-compose
 docker-compose -v
 # docker-compose -v 2.19.0
 
-apt install -y docker-compose-plugin
+# apt install -y docker-compose-plugin
 
-docker compose
+# docker compose
 docker network create --driver overlay ingress-routing
 
 wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64

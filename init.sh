@@ -1,18 +1,17 @@
 ##
-REMOTE_CLIENT=snowtam-demo
+REMOTE_CLIENT=root@personal
 REMOTE_MASTER=swarm
 
-SWARM=false
+SWARM=true
 
 ZFS=false
 
 INSECURE_REGISTRY=swarm.next:5000
 
 WIREGUARD=true
-WIREGUARD_CONF=wg_snw1
-WIREGUARD_NETWORK=10.100.3.0
-WIREGUARD_SERVER_PORT=51821
-
+WIREGUARD_CONF=wg_alex
+WIREGUARD_NETWORK=10.100.100.0
+WIREGUARD_SERVER_PORT=51820
 
 
 ## START
@@ -21,10 +20,10 @@ alias remote_client="ssh ${REMOTE_CLIENT} 'bash -s' "
 
 if [ "$SWARM" = true ] ; then
     echo "Installing Swarm..."
-    remote_client < new/swarm_install.sh
+    remote_client < new/swarm_server_init.sh
 fi
 
-if [ "$INSECURE_REGISTRY" ] ; then
+if [ -n "$INSECURE_REGISTRY" ] ; then
     echo "Adding insecure registry..."
     remote_client < new/insecure-registry.sh $INSECURE_REGISTRY
 fi
@@ -41,7 +40,7 @@ if [ "$WIREGUARD" = true ] ; then
     echo "server_public_ip: ${server_public_ip}"
     remote_client < new/wg_install.sh server $WIREGUARD_CONF $server_ip $WIREGUARD_SERVER_PORT
     server_pubkey=$(ssh ${REMOTE_CLIENT} cat /etc/wireguard/public.key)
-    echo "Server public key:" $pubkey
+    echo "Server public key:" $server_pubkey
     remote_master < new/wg_install.sh client $WIREGUARD_CONF $server_public_ip:$WIREGUARD_SERVER_PORT $server_pubkey $client_ip
     master_pubkey=$(ssh ${REMOTE_MASTER} cat /etc/wireguard/public.key)
     echo "Master public key:" $master_pubkey
