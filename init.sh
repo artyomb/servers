@@ -1,18 +1,22 @@
 ##
-REMOTE_CLIENT=root@personal
+REMOTE_CLIENT=root@ibelieveicanfly.ru
 REMOTE_MASTER=swarm
 
-SWARM=true
+# SWARM=true
 
-ZFS=false
+# ZFS=false
 
-INSECURE_REGISTRY=swarm.next:5000
+# INSECURE_REGISTRY=swarm.next:5000
 
-WIREGUARD=true
-WIREGUARD_CONF=wg_alex
-WIREGUARD_NETWORK=10.100.100.0
-WIREGUARD_SERVER_PORT=51820
+# WIREGUARD=true
+# WIREGUARD_CONF=wg_alex
+# WIREGUARD_NETWORK=10.100.100.0
+# WIREGUARD_SERVER_PORT=51820
 
+TRAEFIK=true
+TRAEFIK_DOMAIN=ibelieveicanfly.ru
+
+PORTAINER=true
 
 ## START
 alias remote_master="ssh ${REMOTE_MASTER} 'bash -s' "
@@ -58,7 +62,12 @@ EOF
     ssh ${REMOTE_MASTER} wg-quick up $WIREGUARD_CONF
 fi
 
-# if [ "$ZFS" = true ] ; then
-#     echo "Installing ZFS..."
-#     zfs_install.sh
-# fi
+if [ "$TRAEFIK" = true ] ; then
+    echo "Deploying Traefik..."
+    cat stacks/ingress.drs | ssh ${REMOTE_CLIENT}  "export TRAEFIK_DOMAIN=\"$TRAEFIK_DOMAIN\";dry-stack swarm_deploy -- --prune"
+fi
+
+if [ "$PORTAINER" = true ] ; then
+    echo "Deploying Portainer..."
+    cat stacks/portainer.drs | ssh ${REMOTE_CLIENT}  "export TRAEFIK_DOMAIN=\"$TRAEFIK_DOMAIN\";dry-stack swarm_deploy -- --prune"
+fi

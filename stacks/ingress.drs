@@ -1,11 +1,14 @@
 Description <<~DCS
-  Elastic, Kibana ...
+  Ingress
 DCS
+
 Labels 'stack.product': 'ingress'
 
-Options name: 'ingress', traefik: true
+Options name: 'ingress', traefik: true, tls_domain: "$TRAEFIK_DOMAIN", traefik_tls: true
 
 Ingress traefik: { host: 'traefik.*', port: '8080' }
+
+PublishPorts traefik: ['80:80', '443:443']
 
 Service :traefik, image: 'traefik:v2.9' do
   ports ['80:80', '443:443' ]
@@ -30,11 +33,10 @@ Service :traefik, image: 'traefik:v2.9' do
   ]
   volume 'traefik_data:/certificates'
   volume 'traefik_data:/letsencrypt'
-  volume '- /var/run/docker.sock:/var/run/docker.sock'
+  volume '/var/run/docker.sock:/var/run/docker.sock'
 end
 
-Deploy traefik:
-       { placement: { constraints: ['node.role == manager'] },labels: [
+Deploy traefik: { placement: { constraints: ['node.role == manager'] }, labels: [
        "traefik.http.middlewares.trf_auth.basicauth.users=admin:$$apr1$$i7hdbc9g$$Rkocxo9snhmuESvUg0TTv/",
        "traefik.http.routers.trf.middlewares=trf_auth"
        ] }

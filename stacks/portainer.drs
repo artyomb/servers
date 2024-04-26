@@ -1,0 +1,31 @@
+Description <<~DCS
+  Portainer stack
+DCS
+Labels 'stack.product': 'portainer'
+
+Options name: 'portainer', traefik: true, tls_domain: "$TRAEFIK_DOMAIN", traefik_tls: true
+
+Ingress portainer: { host: 'portainer.*', port: '9000' }
+
+Service :agent , image: 'portainer/agent:2.19.4' do
+  network 'agent_network'
+  volume '/var/run/docker.sock:/var/run/docker.sock'
+  volume '/var/lib/docker/volumes:/var/lib/docker/volumes'
+end
+
+Service :portainer, image: 'portainer/portainer-ce:2.19.4' do
+  network 'agent_network'
+  command '-H tcp://tasks.agent:9001 --tlsskipverify'
+  volume 'portainer_data:/data'
+end
+
+Deploy agent: {
+  mode: 'global',
+  placement: { constraints: ['node.platform.os == linux'] },
+}
+
+Deploy portainer: { placement: { constraints: ['node.role == manager'] } }
+
+Volume :portainer_data, name: 'portainer_data'
+
+Network :agent_network, name: 'agent_network', driver: 'overlay'
