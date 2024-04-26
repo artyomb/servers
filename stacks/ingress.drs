@@ -1,0 +1,42 @@
+Description <<~DCS
+  Elastic, Kibana ...
+DCS
+Labels 'stack.product': 'ingress'
+
+Options name: 'ingress', traefik: true
+
+Ingress traefik: { host: 'traefik.*', port: '8080' }
+
+Service :traefik, image: 'traefik:v2.9' do
+  ports ['80:80', '443:443' ]
+  command [
+    "--providers.docker",
+    '--providers.docker.constraints=Label(\"traefik.enable\", \"true\")',
+    "--providers.docker.network=ingress-routing",
+    "--providers.docker.swarmMode=true",
+    "--entrypoints.http.address=:80",
+    "--entrypoints.http.http.redirections.entryPoint.to=https",
+    "--entrypoints.http.http.redirections.entryPoint.scheme=https",
+    "--entrypoints.https.address=:443",
+    "--entrypoints.https.http.tls=true",
+    "--entrypoints.https.http.tls.certResolver=le",
+    "--certificatesresolvers.le.acme.email=default@gmail.com",
+    "--certificatesresolvers.le.acme.storage=/certificates/acme.json",
+    "--certificatesresolvers.le.acme.tlschallenge=true",
+    "--accesslog",
+    "--log",
+    "--api",
+    "--api.insecure=true"
+  ]
+  volume 'traefik_data:/certificates'
+  volume 'traefik_data:/letsencrypt'
+  volume '- /var/run/docker.sock:/var/run/docker.sock'
+end
+
+Deploy traefik:
+       { placement: { constraints: ['node.role == manager'] },labels: [
+       "traefik.http.middlewares.trf_auth.basicauth.users=admin:$$apr1$$i7hdbc9g$$Rkocxo9snhmuESvUg0TTv/",
+       "traefik.http.routers.trf.middlewares=trf_auth"
+       ] }
+
+Volume :traefik_data, name: 'traefik_data'
