@@ -4,17 +4,23 @@ DCS
 
 Labels 'stack.product': 'ingress'
 
-Options name: 'ingress', traefik: true, tls_domain: "$TRAEFIK_DOMAIN", traefik_tls: true
+
+Deploy traefik: { placement: { constraints: ['node.role == manager'] }, labels: [
+       'traefik.http.middlewares.%{service-name}_auth.basicauth.users=admin:$$apr1$$i7hdbc9g$$Rkocxo9snhmuESvUg0TTv/',
+       "traefik.http.routers.%{service-name}-0.middlewares=%{service-name}_auth"
+       ] }
+
+Options name: 'ingress', traefik: true, tls_domain: ENV['TRAEFIK_DOMAIN'], traefik_tls: true
 
 Ingress traefik: { host: 'traefik.*', port: '8080' }
 
 PublishPorts traefik: ['80:80', '443:443']
 
 Service :traefik, image: 'traefik:v2.9' do
-  ports ['80:80', '443:443' ]
+  # ports ['80:80', '443:443' ]
   command [
     "--providers.docker",
-    '--providers.docker.constraints=Label(\"traefik.enable\", \"true\")',
+    # "--providers.docker.constraints=Label(\"traefik.enable\", \"true\")",
     "--providers.docker.network=ingress-routing",
     "--providers.docker.swarmMode=true",
     "--entrypoints.http.address=:80",
@@ -36,9 +42,5 @@ Service :traefik, image: 'traefik:v2.9' do
   volume '/var/run/docker.sock:/var/run/docker.sock'
 end
 
-Deploy traefik: { placement: { constraints: ['node.role == manager'] }, labels: [
-       "traefik.http.middlewares.trf_auth.basicauth.users=admin:$$apr1$$i7hdbc9g$$Rkocxo9snhmuESvUg0TTv/",
-       "traefik.http.routers.trf.middlewares=trf_auth"
-       ] }
 
 Volume :traefik_data, name: 'traefik_data'

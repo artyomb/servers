@@ -1,22 +1,23 @@
 ##
-REMOTE_CLIENT=root@ibelieveicanfly.ru
+REMOTE_CLIENT=root@188.225.46.50
 REMOTE_MASTER=swarm
 
 # SWARM=true
 
 # ZFS=false
 
-# INSECURE_REGISTRY=swarm.next:5000
+# INSECURE_REGISTRY=10.100.4.2:5000
+# REGISTRY_PROXIES=true
 
 # WIREGUARD=true
-# WIREGUARD_CONF=wg_alex
-# WIREGUARD_NETWORK=10.100.100.0
+# WIREGUARD_CONF=wg_perfdemo
+# WIREGUARD_NETWORK=10.100.4.0
 # WIREGUARD_SERVER_PORT=51820
 
-TRAEFIK=true
-TRAEFIK_DOMAIN=ibelieveicanfly.ru
+#TRAEFIK=true
+#TRAEFIK_DOMAIN=performance.reg-demo.monitorsoft.ru
 
-PORTAINER=true
+#PORTAINER=true
 
 ## START
 alias remote_master="ssh ${REMOTE_MASTER} 'bash -s' "
@@ -25,6 +26,11 @@ alias remote_client="ssh ${REMOTE_CLIENT} 'bash -s' "
 if [ "$SWARM" = true ] ; then
     echo "Installing Swarm..."
     remote_client < new/swarm_server_init.sh
+fi
+
+if [ "$REGISTRY_PROXIES" = true ] ; then
+    echo "Installing registry proxies..."
+    remote_client < new/registry-proxies.sh
 fi
 
 if [ -n "$INSECURE_REGISTRY" ] ; then
@@ -64,10 +70,11 @@ fi
 
 if [ "$TRAEFIK" = true ] ; then
     echo "Deploying Traefik..."
-    cat stacks/ingress.drs | ssh ${REMOTE_CLIENT}  "export TRAEFIK_DOMAIN=\"$TRAEFIK_DOMAIN\";dry-stack swarm_deploy -- --prune"
+    cat stacks/ingress.drs | ssh ${REMOTE_CLIENT}  "TRAEFIK_DOMAIN=\"$TRAEFIK_DOMAIN\" dry-stack -n to_compose"
+    cat stacks/ingress.drs | ssh ${REMOTE_CLIENT}  "TRAEFIK_DOMAIN=\"$TRAEFIK_DOMAIN\" dry-stack -n swarm_deploy -- --prune"
 fi
 
 if [ "$PORTAINER" = true ] ; then
     echo "Deploying Portainer..."
-    cat stacks/portainer.drs | ssh ${REMOTE_CLIENT}  "export TRAEFIK_DOMAIN=\"$TRAEFIK_DOMAIN\";dry-stack swarm_deploy -- --prune"
+    cat stacks/portainer.drs | ssh ${REMOTE_CLIENT}  "TRAEFIK_DOMAIN=\"$TRAEFIK_DOMAIN\" dry-stack -n swarm_deploy -- --prune"
 fi
