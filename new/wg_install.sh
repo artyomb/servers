@@ -36,6 +36,7 @@ case "$1" in
     PrivateKey = ${wg_private}
     Address = ${network}
     ListenPort = ${port}
+    PersistentKeepalive = 10
 END
         wg-quick up "${conf_name}"
         echo "Server public key:\n"
@@ -59,7 +60,7 @@ END
     PublicKey = ${server_public}
     AllowedIPs = ${allowed_ips}
     Endpoint = ${server_ip}
-    PersistentKeepalive = 20
+    PersistentKeepalive = 10
 END
         echo "Run on server:"
         echo "wg set ${conf_name} peer $(cat /etc/wireguard/public.key) allowed-ips ${client_ip} && wg-quick down ${conf_name} && wg-quick up ${conf_name}"
