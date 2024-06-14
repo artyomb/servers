@@ -1,4 +1,6 @@
-##
+#!/bin/bash
+set -e
+
 REMOTE_CLIENT=root@188.225.46.50
 REMOTE_MASTER=swarm
 
@@ -14,12 +16,13 @@ REMOTE_MASTER=swarm
 # WIREGUARD_NETWORK=10.100.4.0
 # WIREGUARD_SERVER_PORT=51820
 
-#TRAEFIK=true
-#TRAEFIK_DOMAIN=performance.reg-demo.monitorsoft.ru
+TRAEFIK=true
+TRAEFIK_DOMAIN=domain.com
 
-#PORTAINER=true
+PORTAINER=true
 
 ## START
+shopt -s expand_aliases
 alias remote_master="ssh ${REMOTE_MASTER} 'bash -s' "
 alias remote_client="ssh ${REMOTE_CLIENT} 'bash -s' "
 

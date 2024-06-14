@@ -44,6 +44,9 @@ chmod a+x /usr/local/bin/yq
 snap install ruby --classic
 gem install dry-stack build-labels
 
-# add before [ -z "$PS1" ] && return
-sed -i.old '1s;^;PATH=\$PATH:~/.gem/bin\n;' ~/.bashrc
+line_to_add='eval `ruby.env`'
+marker='\[ -z "$PS1" \]'
+if ! grep -qF "$line_to_add" ~/.bashrc; then
+  sed -i "/$marker/i $line_to_add" ~/.bashrc
+fi
 

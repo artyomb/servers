@@ -16,27 +16,41 @@ Ingress traefik: { host: 'traefik.*', port: '8080' }
 
 PublishPorts traefik: ['80:80', '443:443']
 
-Service :traefik, image: 'traefik:v2.9' do
+Service :traefik, image: 'traefik:v3.0.1' do
   # ports ['80:80', '443:443' ]
-  command [
-    "--providers.docker",
-    # "--providers.docker.constraints=Label(\"traefik.enable\", \"true\")",
-    "--providers.docker.network=ingress-routing",
-    "--providers.docker.swarmMode=true",
-    "--entrypoints.http.address=:80",
-    "--entrypoints.http.http.redirections.entryPoint.to=https",
-    "--entrypoints.http.http.redirections.entryPoint.scheme=https",
-    "--entrypoints.https.address=:443",
-    "--entrypoints.https.http.tls=true",
-    "--entrypoints.https.http.tls.certResolver=le",
-    "--certificatesresolvers.le.acme.email=default@gmail.com",
-    "--certificatesresolvers.le.acme.storage=/certificates/acme.json",
-    "--certificatesresolvers.le.acme.tlschallenge=true",
-    "--accesslog",
-    "--log",
-    "--api",
-    "--api.insecure=true"
-  ]
+  command YAML.load <<~YAML
+    - --core.defaultRuleSyntax=v2
+    - --providers.swarm.endpoint=unix:///var/run/docker.sock
+    - --providers.swarm.network=ingress-routing
+
+    # --providers.docker
+    # --providers.docker.constraints=Label(\"traefik.enable\", \"true\")
+    # --providers.docker.network=ingress-routing
+    # --providers.docker.swarmMode=true
+    - --entrypoints.http.address=:80
+    - --entrypoints.http.http.redirections.entryPoint.to=https
+    - --entrypoints.http.http.redirections.entryPoint.scheme=https
+    - --entrypoints.https.address=:443
+    - --entrypoints.https.http.tls=true
+    - --entrypoints.https.http.tls.certResolver=le
+    - --certificatesresolvers.le.acme.email=default@gmail.com
+    - --certificatesresolvers.le.acme.storage=/certificates/acme.json
+    - --certificatesresolvers.le.acme.tlschallenge=true
+
+    - --metrics.otlp=true
+    - --metrics.otlp.addEntryPointsLabels=true
+    - --metrics.otlp.addRoutersLabels=true
+    - --metrics.otlp.addServicesLabels=true
+    - --metrics.otlp.pushInterval=10s
+    # --metrics.otlp.http=true
+    - --metrics.otlp.http.endpoint=https://otel.#{ENV['TRAEFIK_DOMAIN']}/v1/metrics
+    - --metrics.otlp.http.tls.insecureSkipVerify=true
+
+    - --accesslog
+    - --log
+    - --api
+    - --api.insecure=true
+  YAML
   volume 'traefik_data:/certificates'
   volume 'traefik_data:/letsencrypt'
   volume '/var/run/docker.sock:/var/run/docker.sock'
