@@ -2,7 +2,6 @@
 # curl https://raw.githubusercontent.com/artyomb/servers/main/new/swarm_server_init.sh | sh
 
 set -e
-DOCKER_COMPOSE_VER=2.19.0
 
 apt update
 apt install mc htop screen ntp ncdu swapspace rsync -y
@@ -16,26 +15,27 @@ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 add-apt-repository -y "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
 apt install -y docker-ce docker-ce-cli containerd.io
 
-
 service docker restart
 docker -v
+
+docker plugin install grafana/loki-docker-driver:2.9.2 --alias loki --grant-all-permissions
+service docker restart
+
+# https://github.com/moby/libnetwork/issues/1765
+# BUG: traefik cant start: network sandbox join failed: subnet sandbox join failed for "10.0.2.0/24": error creating vxlan interface: file exists
+# FIX: ip -br -d link show | grep vx | grep DOWN | xargs -rn1 ip link delete
+
 # docker -v 24.0.2,  (sudo usermod -aG docker $USER, newgrp docker )
 
-echo '{ "features": { "buildkit": true } }' > /etc/docker/daemon.json
+# TODO: "storage-opts": [ "overlay2.size=5G" ] (backing filesystem is xfs and mounted with pquota mount option.)
+
+echo '{ "features": { "buildkit": true }, "log-driver": "json-file", "log-opts": { "max-size": "250m", "max-file": "3"} }' > /etc/docker/daemon.json
 docker swarm init
 # docker login docker-registry... -u user -p password
 
 # docker service create --name registry --publish published=5000,target=5000 registry:2
 # TODO: https://github.com/moby/buildkit/issues/1368
 
-curl -L https://github.com/docker/compose/releases/download/v${DOCKER_COMPOSE_VER}/docker-compose-`uname -s`-`uname -m` -o /usr/bin/docker-compose
-chmod +x /usr/bin/docker-compose
-docker-compose -v
-# docker-compose -v 2.19.0
-
-# apt install -y docker-compose-plugin
-
-# docker compose
 docker network create --driver overlay ingress-routing
 
 wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64

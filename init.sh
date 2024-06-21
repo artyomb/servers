@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-REMOTE_CLIENT=root@188.225.46.50
+REMOTE_CLIENT=root@domain.ru
 REMOTE_MASTER=swarm
 
 # SWARM=true
@@ -17,9 +17,15 @@ REMOTE_MASTER=swarm
 # WIREGUARD_SERVER_PORT=51820
 
 TRAEFIK=true
-TRAEFIK_DOMAIN=domain.com
+TRAEFIK_DOMAIN=domain.ru
 
 PORTAINER=true
+
+##Publik keys
+find ./public_keys -type f -name "*.pub" | while read -r file; do
+  ssh-copy-id -f -i $file $REMOTE_CLIENT
+done
+ssh $REMOTE_CLIENT "sed '$!N; /^\(.*\)\n\1$/!P; D' -i ~/.ssh/authorized_keys" # remove duplicates
 
 ## START
 shopt -s expand_aliases

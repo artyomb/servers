@@ -22,10 +22,14 @@ Service :traefik, image: 'traefik:v3.0.1' do
     - --core.defaultRuleSyntax=v2
     - --providers.swarm.endpoint=unix:///var/run/docker.sock
     - --providers.swarm.network=ingress-routing
+    # service label 
+    # "traefik.docker.lbswarm=true"
+    # If you enable this option, Traefik will use the virtual IP provided by docker swarm instead of the containers IPs.
+    # Which means that Traefik will not perform any kind of load balancing and will delegate this task to swarm.
 
     # --providers.docker
-    # --providers.docker.constraints=Label(\"traefik.enable\", \"true\")
-    # --providers.docker.network=ingress-routing
+    # --provid.constraints=Label(\"traefik.enable\", \"true\")
+    # --provideers.dockerrs.docker.network=ingress-routing
     # --providers.docker.swarmMode=true
     - --entrypoints.http.address=:80
     - --entrypoints.http.http.redirections.entryPoint.to=https
@@ -42,8 +46,9 @@ Service :traefik, image: 'traefik:v3.0.1' do
     - --metrics.otlp.addRoutersLabels=true
     - --metrics.otlp.addServicesLabels=true
     - --metrics.otlp.pushInterval=10s
-    # --metrics.otlp.http=true
+    # - --metrics.otlp.http=true
     - --metrics.otlp.http.endpoint=https://otel.#{ENV['TRAEFIK_DOMAIN']}/v1/metrics
+    # - --tracing.otlp.http.endpoint=https://otel.#{ENV['TRAEFIK_DOMAIN']}/v1/traces
     - --metrics.otlp.http.tls.insecureSkipVerify=true
 
     - --accesslog

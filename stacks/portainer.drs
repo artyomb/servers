@@ -16,16 +16,10 @@ end
 Service :portainer, image: 'portainer/portainer-ce:2.19.4' do
   network 'agent_network'
   command '-H tcp://tasks.agent:9001 --tlsskipverify'
-  volume 'portainer_data:/data'
+  volume target: '/data', name: 'portainer_data'
 end
 
-Deploy agent: {
-  mode: 'global',
-  placement: { constraints: ['node.platform.os == linux'] },
-}
-
+Deploy agent: { mode: 'global' }
 Deploy portainer: { placement: { constraints: ['node.role == manager'] } }
-
-Volume :portainer_data, name: 'portainer_data'
 
 Network :agent_network, name: 'agent_network', driver: 'overlay'

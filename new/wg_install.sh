@@ -36,7 +36,7 @@ case "$1" in
     PrivateKey = ${wg_private}
     Address = ${network}
     ListenPort = ${port}
-    PersistentKeepalive = 10
+    # PersistentKeepalive = 10
 END
         wg-quick up "${conf_name}"
         echo "Server public key:\n"
