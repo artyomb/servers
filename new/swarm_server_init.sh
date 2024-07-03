@@ -14,6 +14,7 @@ echo 'ip_vs' >> /etc/modules-load.d/modules.conf
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
 add-apt-repository -y "deb [arch=amd64] https://download.docker.com/linux/ubuntu focal stable"
 apt install -y docker-ce docker-ce-cli containerd.io
+# apt remove docker-compose-plugin
 
 service docker restart
 docker -v
